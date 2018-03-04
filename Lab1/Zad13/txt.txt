@@ -1,0 +1,17 @@
+LISTA PLIKÓW:
+Name: '.' size: 4096b
+Name: 'prog13b.c' size: 344b
+Name: 'lol3.txt' size: 613b
+Name: 'prog13' size: 13216b
+Name: 'Makefile' size: 19b
+Name: 'test' size: 13168b
+Name: 'final.c' size: 2081b
+Name: 'test.c' size: 1387b
+Name: 'prog13c' size: 8712b
+Name: 'kac' size: 13288b
+Name: '..' size: 4096b
+Name: 'txt.txt' size: 0b
+Name: 'prog13c.c' size: 1207b
+Name: 'kac.c' size: 2063b
+Name: 'kac.txt' size: 178b
+Name: 'prog13.c' size: 2126b

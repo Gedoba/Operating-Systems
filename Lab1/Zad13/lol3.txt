@@ -1,0 +1,14 @@
+Name of the object: 'prog13.c'  - size: 2087b
+Name of the object: 'kac.txt'  - size: 178b
+Name of the object: 'kac.c'  - size: 2026b
+Name of the object: 'prog13c.c'  - size: 1207b
+Name of the object: '..'  - size: 4096b
+Name of the object: 'kac'  - size: 13288b
+Name of the object: 'prog13c'  - size: 8712b
+Name of the object: 'test.c'  - size: 1387b
+Name of the object: 'final.c'  - size: 2081b
+Name of the object: 'test'  - size: 13168b
+Name of the object: 'Makefile'  - size: 19b
+Name of the object: 'prog13'  - size: 13104b
+Name of the object: 'prog13b.c'  - size: 344b
+Name of the object: '.'  - size: 4096b

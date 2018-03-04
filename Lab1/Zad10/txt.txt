@@ -1,0 +1,7 @@
+LISTA PLIKÓW:
+Name: '.' size: 4096b
+Name: 'Makefile' size: 19b
+Name: '..' size: 4096b
+Name: 'txt.txt' size: 0b
+Name: 'prog10.c' size: 1149b
+Name: 'prog10' size: 13008b

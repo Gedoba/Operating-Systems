@@ -1,0 +1,9 @@
+LISTA PLIKÓW:
+. 4096
+Tomek 196
+Makefile 19
+kac1.txt 0
+prog12.c 1322
+.. 4096
+kac.txt 89
+prog12 13144

@@ -1,0 +1,15 @@
+LISTA PLIKÓW:
+. 4096
+prog13b.c 344
+lol3.txt 439
+prog13 13104
+Makefile 19
+test 13168
+test.c 1387
+prog13c 8712
+kac 13288
+.. 4096
+prog13c.c 1207
+kac.c 1967
+kac.txt 0
+prog13.c 2083
