@@ -35,7 +35,6 @@ void sigPIPE_handler(int sig) {
         last_signal = sig;
         printf("Broken pipe\nExiting...\n");
         exit(EXIT_SUCCESS);
-        //kill(0, SIGINT);
 
 }
 void sigchld_handler(int sig) {
@@ -59,21 +58,18 @@ void child_work(int fds[3][2], int n) {
     char buff[MAX_BUFF];
     
     if(read(fds[n-1][0], buff, MAX_BUFF)<0)
-        //ERR("read from fds");
         kill(0, SIGPIPE);
 
     printf("C%d: %s\n", pid, buff);
     int newNumber = atoi(buff);
         if(newNumber==0){
             printf("ending...\n");
-            //kill(0, SIGINT);
             close(fds[n-1][0]); //close reading
             close(fds[n][1]); //close writing
         }
     newNumber+=random;
     sprintf(buff, "%d", newNumber);
     if(write(fds[n][1], buff, strlen(buff)+1)<0)
-        //ERR("write to fds");
         kill(0, SIGPIPE);
     
 }
@@ -85,20 +81,17 @@ void parent_work(int fds[3][2], int *isFirst) {
     if(*isFirst==1)
     {
         if(write(fds[0][1], buff, strlen(buff)+1)<0)
-            //ERR("Write to fd0");
             kill(0, SIGPIPE);
         *isFirst = 0;
     }
     else if(*isFirst==0){
         if(read(fds[2][0], buff, MAX_BUFF)<0)
-            //ERR("read from fds2");
             kill(0, SIGPIPE);
         printf("P%d: %s\n",pid, buff);
         int random = rand()%21-10;
         int newNumber = atoi(buff);
         if(newNumber==0){
             printf("ending...\n");
-            //kill(0, SIGINT);
             close(fds[2][0]); //close reading
             close(fds[0][1]); //close writing
         }
@@ -106,7 +99,6 @@ void parent_work(int fds[3][2], int *isFirst) {
         newNumber+=random;
         sprintf(buff, "%d", newNumber);
         if(write(fds[0][1], buff, strlen(buff)+1)<0)
-            //ERR("Write to fd0");
             kill(0, SIGPIPE);
         
     }
@@ -149,16 +141,12 @@ void create_children(int fds[3][2]) {
         chld2=fork();
 
     while(1){
-        
-
             
         if(chld1==0 && chld2!=0){
-            //printf("I'm a %d. child, PID: %d\n", 1, getpid());
             child_work(fds, 1);   
             //exit(EXIT_SUCCESS);
         }
         if(chld2==0 && chld1!=0){
-            //printf("I'm a %d. child, PID: %d\n", 2, getpid());
             child_work(fds, 2);   
             //exit(EXIT_SUCCESS);
         }
