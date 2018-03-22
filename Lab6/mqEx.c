@@ -123,8 +123,7 @@ void create_children(int n, mqd_t pin, mqd_t pout) {
 void usage(void){
 	fprintf(stderr,"USAGE: signals n k p l\n");
 	fprintf(stderr,"100 > n > 0 - number of children\n");
-    if(1)
-	    ./exit(EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 }
 
 int main(int argc, char** argv) {

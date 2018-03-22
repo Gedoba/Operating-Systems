@@ -1,3 +1,3 @@
-all: mqEx
-mqEx: mqEx.c
-	gcc -Wall -o mqEx mqEx.c -lrt
+CC=gcc
+CFLAGS= -std=gnu99 -Wall
+LDLIBS= -lpthread -lm -lrt
