@@ -84,8 +84,10 @@ void makeQueues(int n, char *queuesNames, mqd_t *queues){
         queuesNames[1] = 'a' + i + 1;
      
 	    static struct sigevent not;
-	    not.sigev_notify=SIGEV_SIGNAL;
+	    //not.sigev_notify=SIGEV_THREAD;
 	    not.sigev_signo=SIGRTMIN;
+        not.sigev_notify_attributes = NULL;
+        //not.sigev_notify_function = mq_handler;
 	    not.sigev_value.sival_ptr=&queues[i];
 	    if(mq_notify(queues[i], &not)<0)
             ERR("mq_notify");   
