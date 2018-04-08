@@ -109,16 +109,15 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 	if(sethandler(SIG_IGN,SIGPIPE)) ERR("Seting SIGPIPE:");
-	fd=connect_socket(argv[1],argv[2]);
     int hits = 0;
     while(hits<3){
+	    fd=connect_socket(argv[1],argv[2]);
 	    prepare_request(argv,data);
         int32_t sent = ntohl(data[0]);
 	    if(bulk_write(fd,(char *)data,sizeof(int32_t[1]))<0) ERR("write:");
         if(bulk_read(fd,(char *)data,sizeof(int32_t[1]))<0) ERR("read:");
         if(sent == ntohl(data[0]))
             printf("HIT: %d\n", ntohl(data[0]));
-        
         usleep(750000);
         hits++;
     }

@@ -17,7 +17,8 @@
 		exit(EXIT_FAILURE))
 
 #define BACKLOG 3
-volatile sig_atomic_t do_work=1 ;
+volatile sig_atomic_t do_work=1;
+int count = 0;
 int32_t max = 0;
 void sigint_handler(int sig) {
 	do_work=0;
@@ -107,16 +108,13 @@ void calculate(int32_t data[1]){
 void communicate(int cfd){
 	ssize_t size;
 	int32_t data[1];
-    int hits = 0;
-    while(hits<3){
-	    if((size=bulk_read(cfd,(char *)data,sizeof(int32_t[1])))<0) ERR("read:");
-	    if(size==(int)sizeof(int32_t[1])){
-            calculate(data);
-        data[0] = htonl(max);
-	    if(bulk_write(cfd,(char *)data,sizeof(int32_t[1]))<0) ERR("write:");
-		hits++;
-	    }
-
+    //int hits = 0;
+	if((size=bulk_read(cfd,(char *)data,sizeof(int32_t[1])))<0) ERR("read:");
+	if(size==(int)sizeof(int32_t[1])){
+    calculate(data);
+    data[0] = htonl(max);
+	if(bulk_write(cfd,(char *)data,sizeof(int32_t[1]))<0) ERR("write:");
+	//hits++;
     }
 
 	if(TEMP_FAILURE_RETRY(close(cfd))<0)ERR("close");
@@ -134,6 +132,7 @@ void doServer(int fdT){
 		rfds=base_rfds;
 		if(pselect(fdT+1,&rfds,NULL,NULL,NULL,&oldmask)>0){
 			cfd=add_new_client(fdT);
+            count++;
 			if(cfd>=0)communicate(cfd);
 		}else{
 			if(EINTR==errno) continue;
@@ -156,7 +155,7 @@ int main(int argc, char** argv) {
 	fcntl(fdT, F_SETFL, new_flags);
 	doServer(fdT);
 	if(TEMP_FAILURE_RETRY(close(fdT))<0)ERR("close");
-	fprintf(stderr,"Server has terminated.\n");
+	fprintf(stderr,"Server has terminated.%d\n", count);
 	return EXIT_SUCCESS;
     
 }
