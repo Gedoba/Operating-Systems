@@ -86,28 +86,24 @@ void doServer(int fd){
 	char buf[MAXBUF];
 	socklen_t size=sizeof(addr);;
 	int i;
-	int32_t chunkNo, last;
+    char ops[3];
+    ops[0] = '+';
+    ops[1] = '-';
+    ops[2] = '/';
 	for(i=0;i<MAXADDR;i++)con[i].free=1;
 	for(;;){
 		if(TEMP_FAILURE_RETRY(recvfrom(fd,buf,MAXBUF,0,&addr,&size)<0)) ERR("read:");
-		if((i=findIndex(addr,con))>=0){
-			chunkNo=ntohl(*((int32_t*)buf));
-			last=ntohl(*(((int32_t*)buf)+1));
-			if(chunkNo>con[i].chunkNo+1) continue;
-			else if(chunkNo==con[i].chunkNo+1) {
-				if(last){
-					printf("Last Part %d\n%s\n",chunkNo,buf+2*sizeof(int32_t));
-					con[i].free=1;
-				}else
-					printf("Part %d\n%s\n",chunkNo,buf+2*sizeof(int32_t));
-				con[i].chunkNo++;
-			}
-			if(TEMP_FAILURE_RETRY(sendto(fd,buf,MAXBUF,0,&addr,size))<0){
-				if(EPIPE==errno) con[i].free=1;
-				else ERR("send:");
-			}
+        else
+        ;
+        buf[0] = '0' + rand() % 10;
+        buf[1] = ops[rand() % 3];
+        buf[2] = '0' + rand() % 10;
+        buf[3] = '\0';
+		if(TEMP_FAILURE_RETRY(sendto(fd,buf,MAXBUF,0,&addr,size))<0){
+			if(EPIPE==errno)
+                con[i].free=1;
+			else ERR("send:");
 		}
-		
 	}
 }
 void usage(char * name){
@@ -119,6 +115,7 @@ int main(int argc, char** argv) {
 		usage(argv[0]);
 		return EXIT_FAILURE;
 	}
+    srand(getpid());
 	if(sethandler(SIG_IGN,SIGPIPE)) ERR("Seting SIGPIPE:");
 	fd=bind_inet_socket(atoi(argv[1]),SOCK_DGRAM);
 	doServer(fd);

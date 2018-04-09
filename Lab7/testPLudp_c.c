@@ -84,22 +84,27 @@ void doClient(int fd, struct sockaddr_in addr, int file){
 	int32_t last=0;
 	ssize_t size;
 	int counter;
-	do{
-		if((size=bulk_read(file,buf+offset,MAXBUF-offset))<0)ERR("read from file:");
-		*((int32_t*)buf)=htonl(++chunkNo);
-		if(size<MAXBUF-offset) {
-			last=1;
-			memset(buf+offset+size,0,MAXBUF-offset-size);
-		}
-		*(((int32_t*)buf)+1)=htonl(last);
-		memset(buf2,0,MAXBUF);
-		counter=0;
-		do{
-			counter++;
+	//do{
+		//if((size=bulk_read(file,buf+offset,MAXBUF-offset))<0)ERR("read from file:");
+		//*((int32_t*)buf)=htonl(++chunkNo);
+		// if(size<MAXBUF-offset) {
+		// 	last=1;
+		// 	memset(buf+offset+size,0,MAXBUF-offset-size);
+		// }
+		//*(((int32_t*)buf)+1)=htonl(last);
+		//memset(buf2,0,MAXBUF);
+		//counter=0;
+		//do{
+			//counter++;
 			sendAndConfirm(fd,addr,buf,buf2,MAXBUF);
-		}while(*((int32_t*)buf2)!=htonl(chunkNo)&&counter<=5);
-		if(*((int32_t*)buf2)!=htonl(chunkNo)&&counter>5) break;
-	}while(size==MAXBUF-offset);
+        while(recv(fd,buf2,100,0)<0){
+		if(EINTR!=errno)ERR("recv:");
+		if(SIGALRM==last_signal) break;
+	}
+    printf("Buf2:%s\n", buf2);
+		//}while(*((int32_t*)buf2)!=htonl(chunkNo)&&counter<=5);
+		//if(*((int32_t*)buf2)!=htonl(chunkNo)&&counter>5) break;
+	//}while(size==MAXBUF-offset);
 }
 int main(int argc, char** argv) {
 	int fd,file;
