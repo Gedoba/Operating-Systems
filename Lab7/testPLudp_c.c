@@ -1,4 +1,4 @@
-#define _GNU_SOURCE 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -17,6 +17,7 @@
 		     exit(EXIT_FAILURE))
 #define MAXBUF 100
 volatile sig_atomic_t last_signal=0 ;
+
 void sigalrm_handler(int sig) {
 	last_signal=sig;
 }
@@ -68,15 +69,40 @@ void sendAndConfirm(int fd,struct sockaddr_in addr,char *buf1, char *buf2, ssize
 	struct itimerval ts;
 	if(TEMP_FAILURE_RETRY(sendto(fd,buf1,size,0,&addr,sizeof(addr)))<0) ERR("sendto:");
 	memset(&ts, 0, sizeof(struct itimerval));
-	ts.it_value.tv_usec=500000;
-	setitimer(ITIMER_REAL,&ts,NULL);
-	last_signal=0;
+	//ts.it_value.tv_sec = 6;
+	//ts.it_value.tv_usec = 500000;
+	//setitimer(ITIMER_REAL,&ts,NULL);
+	//last_signal=0;
 	while(recv(fd,buf2,size,0)<0){
 		if(EINTR!=errno)ERR("recv:");
-		if(SIGALRM==last_signal) break;
+		//if(SIGALRM==last_signal) break;
 	}
 }
-void doClient(int fd, struct sockaddr_in addr, int file){
+void calculate(char buf[4], double* result){
+	char ops[3];
+    ops[0] = '+';
+    ops[1] = '-';
+    ops[2] = '/';
+	if(buf[2]=='0' && buf[1] == '/')
+	{
+		printf("division by zero\n");
+		*result = -100;
+	}
+	else
+	{
+		int x = buf[0] - '0';
+		int y = buf[2] - '0';
+		if(buf[1]=='+')
+			*result = x+y;
+		else if(buf[1]=='-')
+			*result = x-y;
+		else if(buf[1]=='/')
+			*result = (double)x/(double)y;
+		//printf("%lf\n", *result);
+	}
+}
+
+void doClient(int fd, struct sockaddr_in addr){
 	char buf[MAXBUF];
 	char buf2[MAXBUF];
 	int offset = 2*sizeof(int32_t);
@@ -84,42 +110,39 @@ void doClient(int fd, struct sockaddr_in addr, int file){
 	int32_t last=0;
 	ssize_t size;
 	int counter;
-	//do{
-		//if((size=bulk_read(file,buf+offset,MAXBUF-offset))<0)ERR("read from file:");
-		//*((int32_t*)buf)=htonl(++chunkNo);
-		// if(size<MAXBUF-offset) {
-		// 	last=1;
-		// 	memset(buf+offset+size,0,MAXBUF-offset-size);
-		// }
-		//*(((int32_t*)buf)+1)=htonl(last);
-		//memset(buf2,0,MAXBUF);
-		//counter=0;
-		//do{
-			//counter++;
-			sendAndConfirm(fd,addr,buf,buf2,MAXBUF);
-        while(recv(fd,buf2,100,0)<0){
-		if(EINTR!=errno)ERR("recv:");
-		if(SIGALRM==last_signal) break;
+	double result = 0;
+	double results[1];
+	sendAndConfirm(fd,addr,buf,buf2,MAXBUF);
+	while(1) {//... receive and print
+		// if(last_signal==SIGALRM)
+		// 	{
+		// 		printf("SIGLRM\n");
+		// 		break;
+		// 	}
+    	while(recv(fd,buf2,100,0)<0){
+			if(EINTR!=errno)
+				ERR("recv:");
+			printf("%s\n", buf2);
+			calculate(buf2, &result);
+			results[0] = result;
+			if(TEMP_FAILURE_RETRY(sendto(fd,results,MAXBUF,0,&addr,sizeof(addr)))<0)
+				ERR("send:");
+			result = -100;
+		}
 	}
-    printf("Buf2:%s\n", buf2);
-		//}while(*((int32_t*)buf2)!=htonl(chunkNo)&&counter<=5);
-		//if(*((int32_t*)buf2)!=htonl(chunkNo)&&counter>5) break;
-	//}while(size==MAXBUF-offset);
 }
 int main(int argc, char** argv) {
 	int fd,file;
 	struct sockaddr_in addr;
-	if(argc!=4) {
+	if(argc!=3) {
 		usage(argv[0]);
 		return EXIT_FAILURE;
 	}
 	if(sethandler(SIG_IGN,SIGPIPE)) ERR("Seting SIGPIPE:");
-	if(sethandler(sigalrm_handler,SIGALRM)) ERR("Seting SIGALRM:");
-	if((file=TEMP_FAILURE_RETRY(open(argv[3],O_RDONLY)))<0)ERR("open:");
+	//if(sethandler(sigalrm_handler,SIGALRM)) ERR("Seting SIGALRM:");
 	fd = make_socket();
 	addr=make_address(argv[1],argv[2]);
-	doClient(fd,addr,file);
+	doClient(fd,addr);
 	if(TEMP_FAILURE_RETRY(close(fd))<0)ERR("close");
-	if(TEMP_FAILURE_RETRY(close(file))<0)ERR("close");
 	return EXIT_SUCCESS;
 }

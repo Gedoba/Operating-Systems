@@ -18,11 +18,19 @@
 #define BACKLOG 3
 #define MAXBUF 100
 #define MAXADDR 5
+volatile sig_atomic_t do_work=1;
+int clientsCount = 0;
+
+
 struct connections{
 	int free;
 	int32_t chunkNo;
 	struct sockaddr_in addr;
 };
+
+void sigint_handler(int sig) {
+	do_work=0;
+}
 int sethandler( void (*f)(int), int sigNo) {
 	struct sigaction act;
 	memset(&act, 0, sizeof(struct sigaction));
@@ -80,31 +88,53 @@ int findIndex( struct sockaddr_in addr, struct connections con[MAXADDR]){
 	}
 	return pos;
 }
+
+
 void doServer(int fd){
 	struct sockaddr_in addr;
 	struct connections con[MAXADDR];
 	char buf[MAXBUF];
-	socklen_t size=sizeof(addr);;
+	socklen_t size=sizeof(addr);
 	int i;
-    char ops[3];
-    ops[0] = '+';
-    ops[1] = '-';
-    ops[2] = '/';
+	double results[1];
+	results[0] = -100; //if -100 this means division by zero occured
 	for(i=0;i<MAXADDR;i++)con[i].free=1;
-	for(;;){
-		if(TEMP_FAILURE_RETRY(recvfrom(fd,buf,MAXBUF,0,&addr,&size)<0)) ERR("read:");
-        else
-        ;
-        buf[0] = '0' + rand() % 10;
-        buf[1] = ops[rand() % 3];
-        buf[2] = '0' + rand() % 10;
-        buf[3] = '\0';
+	while(do_work){
+		if(TEMP_FAILURE_RETRY(recvfrom(fd,buf,MAXBUF,0,&addr,&size)<0)) {
+				if(EINTR ==errno)
+					continue;
+				ERR("read:");
+			
+		}
+    	clientsCount++;
+		char ops[3];
+    	ops[0] = '+';
+    	ops[1] = '-';
+    	ops[2] = '/';
+    	buf[0] = '0' + rand() % 10;
+    	buf[1] = ops[rand() % 3];
+    	buf[2] = '0' + rand() % 10;
+    	buf[3] = '\0';
 		if(TEMP_FAILURE_RETRY(sendto(fd,buf,MAXBUF,0,&addr,size))<0){
 			if(EPIPE==errno)
                 con[i].free=1;
 			else ERR("send:");
+		
 		}
+		if(TEMP_FAILURE_RETRY(recvfrom(fd,results,sizeof(results),0,&addr,&size)<0)) {
+				if(EINTR ==errno)
+					continue;
+				ERR("read:");
+			
+		}
+		if(results[0]!=-100)
+			printf("\nresult: %lf\n", results[0]);
+		else
+			printf("\ndivision by zero occured\n");
+		results [0] = -100;
+		
 	}
+	
 }
 void usage(char * name){
 	fprintf(stderr,"USAGE: %s port\n",name);
@@ -117,9 +147,10 @@ int main(int argc, char** argv) {
 	}
     srand(getpid());
 	if(sethandler(SIG_IGN,SIGPIPE)) ERR("Seting SIGPIPE:");
+	if(sethandler(sigint_handler,SIGINT)) ERR("Seting SIGINT:");	
 	fd=bind_inet_socket(atoi(argv[1]),SOCK_DGRAM);
 	doServer(fd);
 	if(TEMP_FAILURE_RETRY(close(fd))<0)ERR("close");
-	fprintf(stderr,"Server has terminated.\n");
+	fprintf(stderr,"\nServer has terminated.\nClients: %d\n", clientsCount);
 	return EXIT_SUCCESS;
 }
