@@ -121,11 +121,10 @@ void doServer(int fd){
 			else ERR("send:");
 		
 		}
-		if(TEMP_FAILURE_RETRY(recvfrom(fd,results,sizeof(results),0,&addr,&size)<0)) {
-				if(EINTR ==errno)
-					continue;
-				ERR("read:");
-			
+		usleep(1500000);
+		if(recvfrom(fd,results,sizeof(results),0,&addr,&size)<0){
+			printf("retrying...\n");			
+			recvfrom(fd,results,sizeof(results),0,&addr,&size);
 		}
 		if(results[0]!=-100)
 			printf("\nresult: %lf\n", results[0]);

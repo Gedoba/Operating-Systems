@@ -20,6 +20,7 @@ volatile sig_atomic_t last_signal=0 ;
 
 void sigalrm_handler(int sig) {
 	last_signal=sig;
+	printf("Timeout\n");
 }
 int sethandler( void (*f)(int), int sigNo) {
 	struct sigaction act;
@@ -65,18 +66,25 @@ ssize_t bulk_read(int fd, char *buf, size_t count){
 void usage(char * name){
 	fprintf(stderr,"USAGE: %s domain port file \n",name);
 }
+
 void sendAndConfirm(int fd,struct sockaddr_in addr,char *buf1, char *buf2, ssize_t size){
 	struct itimerval ts;
 	if(TEMP_FAILURE_RETRY(sendto(fd,buf1,size,0,&addr,sizeof(addr)))<0) ERR("sendto:");
 	memset(&ts, 0, sizeof(struct itimerval));
-	//ts.it_value.tv_sec = 6;
-	//ts.it_value.tv_usec = 500000;
+	//ts.it_value.tv_sec = 5;
+	ts.it_value.tv_usec=500000;
 	//setitimer(ITIMER_REAL,&ts,NULL);
-	//last_signal=0;
+	last_signal=0;
+	int isFirst = 1;
 	while(recv(fd,buf2,size,0)<0){
 		if(EINTR!=errno)ERR("recv:");
+		if(isFirst == 0)
+			break;
+		isFirst = 0;
 		//if(SIGALRM==last_signal) break;
 	}
+
+	
 }
 void calculate(char buf[4], double* result){
 	char ops[3];
@@ -108,28 +116,19 @@ void doClient(int fd, struct sockaddr_in addr){
 	int offset = 2*sizeof(int32_t);
 	int32_t chunkNo=0;
 	int32_t last=0;
-	ssize_t size;
+	socklen_t size=sizeof(addr);
 	int counter;
 	double result = 0;
 	double results[1];
 	sendAndConfirm(fd,addr,buf,buf2,MAXBUF);
-	while(1) {//... receive and print
-		// if(last_signal==SIGALRM)
-		// 	{
-		// 		printf("SIGLRM\n");
-		// 		break;
-		// 	}
-    	while(recv(fd,buf2,100,0)<0){
-			if(EINTR!=errno)
-				ERR("recv:");
-			printf("%s\n", buf2);
-			calculate(buf2, &result);
-			results[0] = result;
-			if(TEMP_FAILURE_RETRY(sendto(fd,results,MAXBUF,0,&addr,sizeof(addr)))<0)
-				ERR("send:");
-			result = -100;
-		}
-	}
+	alarm(5);
+	printf("%s\n", buf2);
+	calculate(buf2, &result);
+	results[0] = result;
+	int sleepTime = rand() % 15 + 5;
+	usleep(sleepTime * 100000);
+	if(TEMP_FAILURE_RETRY(sendto(fd,results,MAXBUF,0,&addr,sizeof(addr)))<0)
+		ERR("send:");
 }
 int main(int argc, char** argv) {
 	int fd,file;
@@ -138,8 +137,9 @@ int main(int argc, char** argv) {
 		usage(argv[0]);
 		return EXIT_FAILURE;
 	}
+	srand(getpid());
 	if(sethandler(SIG_IGN,SIGPIPE)) ERR("Seting SIGPIPE:");
-	//if(sethandler(sigalrm_handler,SIGALRM)) ERR("Seting SIGALRM:");
+	if(sethandler(sigalrm_handler,SIGALRM)) ERR("Seting SIGALRM:");
 	fd = make_socket();
 	addr=make_address(argv[1],argv[2]);
 	doClient(fd,addr);
