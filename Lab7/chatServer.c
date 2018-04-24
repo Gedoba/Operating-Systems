@@ -189,8 +189,8 @@ int main(int argc, char **argv)
     }
     if (sethandler(SIG_IGN, SIGPIPE))
         ERR("Seting SIGPIPE:");
-    //if (sethandler(sigint_handler, SIGINT))
-    //    ERR("Seting SIGINT:");
+    if (sethandler(sigint_handler, SIGINT))
+        ERR("Seting SIGINT:");
     fdT = bind_tcp_socket(atoi(argv[1]));
     new_flags = fcntl(fdT, F_GETFL) | O_NONBLOCK;
     fcntl(fdT, F_SETFL, new_flags);
