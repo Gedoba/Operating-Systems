@@ -106,7 +106,7 @@ void communicate(int cfd){
     char buff[10];
 	if((size=bulk_read(cfd,(char *)buff,sizeof(char[10])))<0) ERR("read:");
 	if(size==(int)sizeof(char[10])){
-        printf("Name of the server: %s \n", buff);
+        printf("Name of the client: %s \n", buff);
 		calculate(data);
 		if(bulk_write(cfd,(char *)data,sizeof(int32_t[1]))<0&&errno!=EPIPE) ERR("write:");
 	}

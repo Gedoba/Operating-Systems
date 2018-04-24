@@ -115,7 +115,9 @@ int main(int argc, char** argv) {
 	fd=connect_socket(argv[2],argv[3]);
 	//prepare_request(argv,data);
 	if(bulk_write(fd,(char *)buff,sizeof(char[10]))<0) ERR("write:");
+	printf("write\n");
 	if(bulk_read(fd,(char *)data,sizeof(int32_t[1]))<(int)sizeof(int32_t[1])) ERR("read:");
+	printf("read\n");
 	print_answer(data);
 	if(TEMP_FAILURE_RETRY(close(fd))<0)ERR("close");
 	return EXIT_SUCCESS;
